@@ -85,7 +85,7 @@ def generate_mask(mask_path, jpg_path):
     print(img_np.shape)
 
     xy = polygons[0]['0']
-    print(xy)
+
     fig = plt.figure(figsize=(width/100, height/100))
     ax = plt.subplot()
     ax.imshow(img_np)

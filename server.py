@@ -7,11 +7,7 @@ import uuid
 
 app = Flask(__name__)
 
-@app.route('/')
-def init():
-    return 
-
-@app.route('/image_color', methods= ['PUT', 'POST'])
+@app.route('/image_color', methods= ['POST'])
 def image_color():
     if request.method == 'POST':
         if 'image' not in request.files:
@@ -56,10 +52,10 @@ def image_color():
 def random_color():
     if request.method == 'POST':
         if 'image' not in request.files:
-            return 'file_path not found!'
+            return 'image not found!'
 
         if 'text' not in request.files:
-            return 'txt_path not found!'
+            return 'text not found!'
         
         if 'lang' not in request.form :
             return 'lang not found!'
@@ -94,4 +90,4 @@ def random_color():
     return 'complete'
 
 if __name__ == "__main__" :
-    app.run(debug=True)
+    app.run(host='0.0.0.0')
