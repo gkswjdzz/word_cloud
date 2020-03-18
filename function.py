@@ -9,6 +9,8 @@ from config import Config
 import os
 import requests
 
+import time
+
 mpl.use('agg')
 
 def post_stanfordnlp(filepath, lang) :
@@ -23,8 +25,9 @@ def post_stanfordnlp(filepath, lang) :
     data = {
         'model_version' : lang
     }
+    start = time.time()
     predictions = requests.post(Config.STANFORDNLP_URL, data= data, files=files)
-
+    print("post stafordnlp time : ", time.time() - start)
     text = []
     
     ret = predictions.json()
@@ -36,12 +39,12 @@ def post_stanfordnlp(filepath, lang) :
 
     txt = ' '.join(text)
     
-    print(txt)
     print('end post stanfordnlp')
     
     return txt
 
 def generate_word_cloud(out_path, mask_path, text):
+    start = time.time()
     # get data directory (using getcwd() is needed to support running example in generated IPython notebook)
     d = path.dirname(__file__) if "__file__" in locals() else os.getcwd()
 
@@ -60,7 +63,8 @@ def generate_word_cloud(out_path, mask_path, text):
     wc.recolor(color_func=image_colors)
     # store to file
     wc.to_file(path.join(d, out_path))
-
+    print("generate word cloud time : ", time.time() - start)
+    
 def get_ax_size(fig, ax):
     bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
     width, height = bbox.width, bbox.height
@@ -101,8 +105,12 @@ def generate_mask(mask_path, jpg_path):
 
 def post_detectron2(filepath) :
     files = { 'file' : open(filepath, 'rb')}
+    start = time.time()
+    
     predictions = requests.post(Config.DETECTRON_URL, files=files)
-
+    
+    print("post detectron2 time : ", time.time() - start)
+    
     return predictions.json()
 
 def get_polygons(predictions, className) :
