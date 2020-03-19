@@ -43,24 +43,27 @@ def post_stanfordnlp(filepath, lang) :
     
     return txt
 
-def generate_word_cloud(out_path, mask_path, text):
+def generate_word_cloud(out_path, mask_path, colored_path, is_colored, text):
     start = time.time()
     # get data directory (using getcwd() is needed to support running example in generated IPython notebook)
     d = path.dirname(__file__) if "__file__" in locals() else os.getcwd()
 
     #alice_mask = np.array(Image.open(path.join(d, mask_path)))
-    alice_coloring = np.array(Image.open(path.join(d, mask_path)))
+    img = np.array(Image.open(path.join(d, colored_path if is_colored else mask_path)))
+    
     stopwords = set(STOPWORDS)
     stopwords.add("said")
-
-    wc = WordCloud(background_color="white", max_words=2000, mask=alice_coloring,
+    
+    wc = WordCloud(background_color="white", max_words=2000, mask=img,
                 max_font_size=40, random_state=42, stopwords=stopwords, contour_width=0, contour_color='steelblue')
 
     # generate word cloud
     wc.generate(text)
 
-    image_colors = ImageColorGenerator(alice_coloring)
-    wc.recolor(color_func=image_colors)
+    if colored_path is not None :
+        image_colors = ImageColorGenerator(img)
+        wc.recolor(color_func=image_colors)
+
     # store to file
     wc.to_file(path.join(d, out_path))
     print("generate word cloud time : ", time.time() - start)
