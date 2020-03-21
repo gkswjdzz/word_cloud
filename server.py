@@ -1,56 +1,40 @@
-from flask import Flask, request, flash, send_file
-import json
-import numpy as np
-import matplotlib as mlp
+from flask import Flask, request, send_file
 from function import generate_mask, post_stanfordnlp, generate_word_cloud
 import uuid
 
 app = Flask(__name__)
 
-@app.route('/image_color', methods= ['POST'])
-def image_color():
-    if request.method == 'POST':
-        if 'image' not in request.files:
-            return 'file_path not found!'
+def generate(id, is_colored, out_path, png_path, txt_path, lang) :
 
-        if 'text' not in request.files:
-            return 'txt_path not found!'
-        
-        if 'lang' not in request.form :
-            return 'lang not found!'
-        
-        id = str(uuid.uuid4())
-        f = request.files['image']
-        jpg_path = id + '.jpg'
-        f.save(jpg_path)
-        
-        f = request.files['text']
-        txt_path = id + '.txt'
-        f.save(txt_path)
+    result_path = id + 'mask.png'
+    
+    generate_mask(is_colored, result_path, png_path)
+    print(result_path)
 
-        lang = request.form['lang']
+    #post stanfordnlp
+    txt = post_stanfordnlp(txt_path, lang)
+    
+    print('post to stanfordnlp success!')
+    
+    #execute word_cloud
+    generate_word_cloud(out_path, result_path, is_colored, txt)
+
+def upload(files, form, id):
+    f = request.files['image']
+    png_path = id + '.png'
+    f.save(png_path)
+    
+    f = request.files['text']
+    txt_path = id + '.txt'
+    f.save(txt_path)
+
+    lang = request.form['lang']    
         
-        print("upload complete!")
+    return png_path, txt_path, lang
 
-        mask_path = id + 'mask.jpg'
-        generate_mask(mask_path, jpg_path)
-        print(mask_path)
-
-        #post stanfordnlp
-        txt = post_stanfordnlp(txt_path, lang)
-        
-        print('post to stanfordnlp success!')
-        
-        out_path = id + 'out.png'
-        #execute word_cloud
-        generate_word_cloud(out_path, mask_path, txt)
-
-        return send_file(out_path, mimetype='image/png')        
-    return 'complete'
-
-@app.route('/random_color', methods= ['PUT', 'POST'])
+@app.route('/random_color', methods= ['POST'])
 def random_color():
-    if request.method == 'POST':
+    if request.method == 'POST':    
         if 'image' not in request.files:
             return 'image not found!'
 
@@ -59,35 +43,41 @@ def random_color():
         
         if 'lang' not in request.form :
             return 'lang not found!'
-        
+    
         id = str(uuid.uuid4())
-        f = request.files['image']
-        jpg_path = id + '.jpg'
-        f.save(jpg_path)
-        
-        f = request.files['text']
-        txt_path = id + '.txt'
-        f.save(txt_path)
-
-        lang = request.form['lang']
+        png_path, txt_path, lang = upload(request.files, request.form, id)
         
         print("upload complete!")
 
-        mask_path = id + 'mask.jpg'
-        generate_mask(mask_path, jpg_path)
-        print(mask_path)
-
-        #post stanfordnlp
-        txt = post_stanfordnlp(txt_path, lang)
-        
-        print('post to stanfordnlp success!')
-        
         out_path = id + 'out.png'
-        #execute word_cloud
-        generate_word_cloud(out_path, mask_path, txt)
-
+        generate(id, False, out_path, png_path, txt_path, lang)
+        
         return send_file(out_path, mimetype='image/png')        
-    return 'complete'
+    return "Record not found", 400
+
+@app.route('/image_color', methods= ['POST'])
+def image_color():
+    if request.method == 'POST':    
+        if 'image' not in request.files:
+            return 'image not found!'
+
+        if 'text' not in request.files:
+            return 'text not found!'
+        
+        if 'lang' not in request.form :
+            return 'lang not found!'
+    
+        id = str(uuid.uuid4())
+        png_path, txt_path, lang = upload(request.files, request.form, id)
+        
+        print("upload complete!")
+
+        out_path = id + 'out.png'
+        generate(id, True, out_path, png_path, txt_path, lang)
+        
+        return send_file(out_path, mimetype='image/png')        
+    return "Record not found", 400
 
 if __name__ == "__main__" :
     app.run(host='0.0.0.0')
+    #app.run(debug=True)

@@ -1,5 +1,5 @@
 from os import path
-from PIL import Image
+from PIL import Image, ImageDraw, ImageColor
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -43,24 +43,24 @@ def post_stanfordnlp(filepath, lang) :
     
     return txt
 
-def generate_word_cloud(out_path, mask_path, colored_path, is_colored, text):
+def generate_word_cloud(out_path, result_path, is_colored, text):
     start = time.time()
     # get data directory (using getcwd() is needed to support running example in generated IPython notebook)
     d = path.dirname(__file__) if "__file__" in locals() else os.getcwd()
 
     #alice_mask = np.array(Image.open(path.join(d, mask_path)))
-    img = np.array(Image.open(path.join(d, colored_path if is_colored else mask_path)))
+    img = np.array(Image.open(path.join(d, result_path)))
     
     stopwords = set(STOPWORDS)
     stopwords.add("said")
     
-    wc = WordCloud(background_color="white", max_words=2000, mask=img,
+    wc = WordCloud(mode="RGBA", background_color=None, max_words=2000, mask=img,
                 max_font_size=40, random_state=42, stopwords=stopwords, contour_width=0, contour_color='steelblue')
 
     # generate word cloud
     wc.generate(text)
 
-    if colored_path is not None :
+    if is_colored is True :
         image_colors = ImageColorGenerator(img)
         wc.recolor(color_func=image_colors)
 
@@ -75,36 +75,52 @@ def get_ax_size(fig, ax):
     height *= fig.dpi
     return width, height
 
-def generate_mask(mask_path, jpg_path):
-    print('in function generate_mask')
+def generate_mask(is_colored, colored_path, jpg_path):
+    print('in function generate_colored')
+    img = Image.open(jpg_path).convert("RGB")
+
+    img_np = np.asarray(img)
+
     predictions = post_detectron2(jpg_path)
     polygons = get_polygons(predictions, None)
+    polygons = polygons[0]['0']
+    polygons_tuple = [tuple(x) for x in polygons]
 
-    img = Image.open(jpg_path)
-    img_np = np.array(img)
+    print(len(polygons_tuple))
+    colored_img = Image.new('1', (img_np.shape[1], img_np.shape[0]), 0)
 
-    print(img_np.shape)
-    height, width, _ = img_np.shape
-
-    img_np = np.array([255] * (height * width * 3), dtype=np.uint8)
-    img_np = img_np.reshape(height, width, 3)
+    ImageDraw.Draw(colored_img).polygon(polygons_tuple, outline=1, fill=1)
     
-    print(img_np.shape)
+    colored_np = np.array(colored_img)
 
-    xy = polygons[0]['0']
+    print(np.count_nonzero(colored_np))
+    t = time.time()
 
-    fig = plt.figure(figsize=(width/100, height/100))
-    ax = plt.subplot()
-    ax.imshow(img_np)
-    ax.axis('off')
-    ax.axes.get_xaxis().set_visible(False)
-    ax.axes.get_yaxis().set_visible(False)
+    if is_colored is False :
+        reversal_np = np.where(colored_np, False, True)
+        new_img_np = np.full(img_np.shape, 255, dtype='uint8')
+        
+        new_img_np[:,:,0] = new_img_np[:,:,0] * reversal_np
+        new_img_np[:,:,1] = new_img_np[:,:,1] * reversal_np
+        new_img_np[:,:,2] = new_img_np[:,:,2] * reversal_np
 
-    fig_width, fig_height = get_ax_size(fig, ax)
-    
-    ax.add_patch(mpl.patches.Polygon(xy, fill=True, facecolor='k', edgecolor='none', alpha=1.0))
-    
-    fig.savefig(mask_path, bbox_inches='tight', pad_inches=0, dpi=100*height/fig_height)
+    else:
+        new_img_np = np.empty(img_np.shape, dtype='uint8')
+
+        new_img_np[:,:,:3] = img_np[:,:,:3]
+
+        new_img_np[:,:,0] = new_img_np[:,:,0] * colored_np
+        new_img_np[:,:,1] = new_img_np[:,:,1] * colored_np
+        new_img_np[:,:,2] = new_img_np[:,:,2] * colored_np
+        
+        for row in new_img_np:
+        	for col in row:
+		        if np.all(col==0):
+			        col.fill(255)
+    print('time : ', time.time() - t)
+
+    newIm = Image.fromarray(new_img_np, "RGB")
+    newIm.save(colored_path)
 
 def post_detectron2(filepath) :
     files = { 'file' : open(filepath, 'rb')}
