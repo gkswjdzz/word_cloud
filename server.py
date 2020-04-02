@@ -90,6 +90,10 @@ def main():
     <head>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
     integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     </head>
     <div class=container>
     <div class="jumbotron mt-3">
@@ -98,8 +102,8 @@ def main():
     <A>API deployed on  </A> <A href="https://ainize.ai/gkswjdzz/word-cloud"> Ainize </A>
     <hr class="my-4">
     <!-- <h3>Image URL: <input id="source_url" placeholder="http://"> </h3><br> -->
-    <h3> Image : <input id="image_input" accept="image/*" type="file" name="image"><h3><br>
-    <h3> text : <input id="text_input" accept=".txt" type="file" name="text"><h3><br>
+    <h5> Image : <input id="image_input" accept="image/*" type="file" name="image"><h5>
+    <h5> Text : <input id="text_input" accept=".txt" type="file" name="text"><h5><br>
     
     <style>
     #submit{
@@ -109,12 +113,16 @@ def main():
         border-bottom-right-radius: 5px;
     }
     </style>
-    <h3>RUN:  <button type="submit" class="btn btn-primary btn-lg" id="submit">Submit</button></h3>
+    <h3>RUN:<button type="button" id="submit" class="btn btn-primary">
+        Submit
+    </button>
+    </h3>
     <div id="result">
         <image id="resultImage">
         <input type='hidden' id="log" size='50'>
     </div>
     <script>
+    
     const run = (retry_cnt=0, retry_sec=1) => {
         let formData = new FormData();
 
@@ -124,8 +132,8 @@ def main():
         } else {
             throw Error('Retry Error');
         }
-        url = "https://word-cloud.gkswjdzz.endpoint.ainize.ai/image-color"
-        
+        url = "https://word-cloud.gkswjdzz.endpoint.ainize.ai/image_color"
+
         formData.append('image', document.getElementById('image_input').files[0])
         formData.append('text', document.getElementById('text_input').files[0])
         formData.append('lang', 'en_ewt_0.2.0')
@@ -152,13 +160,17 @@ def main():
                             run(retry_cnt, retry_sec)
                         }, retry_sec * 1000
                     )
+                    document.getElementById('submit').removeAttribute('disabled', false);
                 } else if (response.status === 500) {
                     document.getElementById("log").removeAttribute("type");
                     document.getElementById("log").value = 'internal server error!';
+                    document.getElementById('submit').removeAttribute('disabled', false);
                     throw Error('Server Error - Debugging Please!');
                 }else {
                     document.getElementById("log").removeAttribute("type");
                     document.getElementById("log").value = 'image file or text file not found!';
+                    document.getElementById('submit').removeAttribute('disabled');
+                    document.getElementById('submit').innerHTML = 'Submit';
                     throw Error('Server Error - Debugging Please!');
                 }
             })
@@ -168,9 +180,16 @@ def main():
                 document.getElementById('log').setAttribute('type', 'hidden')
                 document.getElementById('result').style.display = 'block';
                 document.getElementById('resultImage').src = imageURL;
+                document.getElementById('submit').removeAttribute('disabled');
+                document.getElementById('submit').innerHTML = 'Submit';
             })
     };
-    document.getElementById('submit').onclick = () => run()
+    document.getElementById('submit').onclick = () => {
+        run();
+       document.getElementById('submit').innerHTML = '<span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>Loading...';
+       document.getElementById('submit').setAttribute('disabled', true);
+    };
+    
     </script>
     </div>
     </div>
