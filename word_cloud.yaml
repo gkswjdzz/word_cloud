@@ -1,0 +1,79 @@
+openapi: 3.0.0
+info:
+  title: Word Cloud
+  version: 0.1.0
+  description: "## This is API server that provides word cloud image using image and text. \n This server use python library from [word_cloud](https://github.com/amueller/word_cloud) opensource project to genereate word cloud. \n### Supported Language:\n- English \n- coming soon..\n\n ### Supported Word Cloud:\n- Image color\n- Mask color "
+  contact:
+    name: API Support (Feature Request, Report Issue)
+    url: 'https://github.com/gkswjdzz/word_cloud'   
+paths:
+  /image_color:
+    post:
+      tags:
+        - Word Cloud
+      summary: Color a word-cloud based on source image.
+      description: "[Sample Photo Download Link](https://raw.githubusercontent.com/amueller/word_cloud/master/examples/alice_color.png)\n[Sample Text Download Link](https://raw.githubusercontent.com/amueller/word_cloud/master/examples/alice.txt)"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                lang:
+                  type: string
+                  example: en_ewt_0.2.0
+                image:
+                  type: string
+                  format: binary
+                text:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Result image.
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Bad request
+  /random_color:
+    post:
+      tags:
+        - Word Cloud
+      summary: Color a word-cloud at random.
+      description: "[Sample Photo Download Link](https://raw.githubusercontent.com/amueller/word_cloud/master/examples/alice_color.png)\n[Sample Text Download Link](https://raw.githubusercontent.com/amueller/word_cloud/master/examples/alice.txt)"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                lang:
+                  type: string
+                  example: en_ewt_0.2.0
+                image:
+                  type: string
+                  format: binary
+                text:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Result image.
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Bad request
+  
+tags:
+  - name: Word Cloud
+    description: Generate word-cloud from image and text.
+servers:
+  - url: 'https://word-cloud.gkswjdzz.endpoint.ainize.ai'
+
+security: [] 
