@@ -1,4 +1,4 @@
-[![Run on Ainize](https://ainize.ai/static/images/run_on_ainize_button.svg)](https://ainize.web.app/redirect?git_repo=github.com/gkswjdzz/word_cloud)
+[![Run on Ainize](https://ainize.ai/static/images/run_on_ainize_button.svg)](http://word-cloud.gkswjdzz.endpoint.ainize.ai/)
 
 # Word Cloud
 
