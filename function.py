@@ -43,7 +43,7 @@ def post_stanfordnlp(filepath, lang) :
     
     return txt
 
-def generate_word_cloud(out_path, result_path, is_colored, text):
+def generate_word_cloud(out_path, result_path, is_colored, text, font_size):
     start = time.time()
     # get data directory (using getcwd() is needed to support running example in generated IPython notebook)
     d = path.dirname(__file__) if "__file__" in locals() else os.getcwd()
@@ -54,8 +54,8 @@ def generate_word_cloud(out_path, result_path, is_colored, text):
     stopwords = set(STOPWORDS)
     stopwords.add("said")
     
-    wc = WordCloud(mode="RGBA", background_color=None, max_words=2000, mask=img,
-                max_font_size=40, random_state=42, stopwords=stopwords, contour_width=0, contour_color='steelblue')
+    wc = WordCloud(mode="RGBA", background_color=None, max_words=4000, mask=img,
+                max_font_size=font_size, random_state=42, stopwords=stopwords, contour_width=0, contour_color='steelblue')
 
     # generate word cloud
     wc.generate(text)
@@ -75,21 +75,23 @@ def get_ax_size(fig, ax):
     height *= fig.dpi
     return width, height
 
-def generate_mask(is_colored, colored_path, jpg_path):
+def generate_mask(is_colored, colored_path, jpg_path, class_name):
     print('in function generate_colored')
     img = Image.open(jpg_path).convert("RGB")
 
     img_np = np.asarray(img)
 
     predictions = post_detectron2(jpg_path)
-    polygons = get_polygons(predictions, None)
-    polygons = polygons[0]['0']
-    polygons_tuple = [tuple(x) for x in polygons]
-
-    print(len(polygons_tuple))
+    polygons_list = get_polygons(predictions, class_name)
     colored_img = Image.new('1', (img_np.shape[1], img_np.shape[0]), 0)
 
-    ImageDraw.Draw(colored_img).polygon(polygons_tuple, outline=1, fill=1)
+    for polygons in polygons_list :
+        polygons = polygons['0']
+        polygons_tuple = [tuple(x) for x in polygons]
+
+        print(len(polygons_tuple))
+        
+        ImageDraw.Draw(colored_img).polygon(polygons_tuple, outline=1, fill=1)
     
     colored_np = np.array(colored_img)
 
@@ -120,6 +122,12 @@ def generate_mask(is_colored, colored_path, jpg_path):
     print('time : ', time.time() - t)
 
     newIm = Image.fromarray(new_img_np, "RGB")
+    
+    width, height = newIm.size
+    ratioHW = height/width
+    if width > 1200 :
+        newIm = newIm.resize((1200, int(1200*ratioHW)))
+    print(newIm.size)
     newIm.save(colored_path)
 
 def post_detectron2(filepath) :
@@ -132,10 +140,11 @@ def post_detectron2(filepath) :
     
     return predictions.json()
 
-def get_polygons(predictions, className) :
+def get_polygons(predictions, class_name) :
     polygons = []
 
     for idx in predictions.keys() :
-        polygons.append(predictions[idx]['polygons'])
+        if predictions[idx]['class'] == class_name :
+            polygons.append(predictions[idx]['polygons'])
 
     return polygons
