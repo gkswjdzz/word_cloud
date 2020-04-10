@@ -31,7 +31,9 @@ def post_stanfordnlp(filepath, lang) :
     text = []
     
     ret = predictions.json()
-    
+    if type(ret) == str :
+        return 400
+        
     for key in ret :
         for word in ret[key] :
             if word['upos'] == 'NOUN' or word['upos'] == 'PROPN':

@@ -14,10 +14,14 @@ def generate(id, is_colored, out_path, png_path, txt_path, lang, class_name, fon
     #post stanfordnlp
     txt = post_stanfordnlp(txt_path, lang)
     
+    if type(txt) is int and txt == 400 :
+        return 400
     print('post to stanfordnlp success!')
     
     #execute word_cloud
     generate_word_cloud(out_path, result_path, is_colored, txt, font_size)
+
+    return 200
 
 def upload(files, form, id):
     f = request.files['image']
@@ -62,9 +66,11 @@ def random_color():
         print("upload complete!")
 
         out_path = id + 'out.png'
-        generate(id, False, out_path, png_path, txt_path, lang, class_name, font_size)
-        
-        return send_file(out_path, mimetype='image/png')        
+        ret = generate(id, False, out_path, png_path, txt_path, lang, class_name, font_size)
+        if ret == 200:
+            return send_file(out_path, mimetype='image/png')        
+        elif ret == 400 :
+            return abort(424, 'txt file is too big')
     return "Record not found", 400
 
 @app.route('/image_color', methods= ['POST'])
@@ -96,9 +102,11 @@ def image_color():
         print("upload complete!")
 
         out_path = id + 'out.png'
-        generate(id, True, out_path, png_path, txt_path, lang, class_name, font_size)
-        
-        return send_file(out_path, mimetype='image/png')        
+        ret = generate(id, True, out_path, png_path, txt_path, lang, class_name, font_size)
+        if ret == 200:
+            return send_file(out_path, mimetype='image/png')        
+        elif ret == 400 :
+            return abort(424, 'txt file is too big')        
     return "Record not found", 400
 
 @app.route('/')
@@ -118,9 +126,9 @@ def main():
     <A>Git hub repository : </A> <A href="https://github.com/gkswjdzz/word_cloud"> Word Cloud </A> <br>
     <A>API deployed on  </A> <A href="https://ainize.ai/gkswjdzz/word-cloud"> Ainize </A>
     <hr class="my-2">
-    <h5> Image : <input id="image_input" accept="image/*" type="file" name="image"><h5>
-    <h5> Text : <input id="text_input" accept=".txt" type="file" name="text"><h5><br>
-    <h5> Things : <select id="things">
+    <h5> image file : <input id="image_input" accept="image/*" type="file" name="image"><h5>
+    <h5> text file : <input id="text_input" accept=".txt" type="file" name="text"><h5><br>
+    <h5> things : <select id="things">
             <option value="person">person</option>
             <option value="bicycle">bicycle</option>
             <option value="car">car</option>
@@ -213,12 +221,13 @@ def main():
             <option value="toothbrush">toothbrush</option>
             <option value="hair brush">hair brush</option>
         </select><h5>
-        <!--
-        <input type="range" name="rangeInput" min="10" max="100" onchange="updateTextInput(this.value);">
-        <input type="text" id="text_input" size=3 value="20" disabled="disabled">
-        -->
         Max Font Size : <input type="range" name="rangeInput" min="0" max="100" onchange="updateTextInput(this.value);">
-        <input type="text" id="textInput" size=3 value="20" disabled="disabled">
+        <input type="text" id="textInput" size=3 value="20" disabled="disabled"><br><br>
+        <h5><font color="red">NOTICE!!</font></h5>
+        <h6>
+        <font color="red">This server only support English. Please add the txt file in English.</font><br>
+        <font color="red">available txt file size < 10KB</font>
+        </h6>
     <style>
     #submit{
         border-top-left-radius: 5px;
@@ -232,8 +241,8 @@ def main():
     </button>
     </h3>
     <div id="result">
-        <image id="resultImage">
         <input type='hidden' id="log" size='50'>
+        <image id="resultImage">
     </div>
     <script>
     function updateTextInput(val) {
@@ -280,7 +289,12 @@ def main():
                     throw Error('Server Error - Debugging Please!');
                 }else {
                     document.getElementById("log").removeAttribute("type");
-                    document.getElementById("log").value = 'image file or text file not found!';
+                    
+                    if(response.status == 424)
+                       document.getElementById("log").value = 'size of txt file is too big!';
+                    else
+                        document.getElementById("log").value = 'image file or text file not found!';
+                    
                     document.getElementById('submit').removeAttribute('disabled');
                     document.getElementById('submit').innerHTML = 'Submit';
                     throw Error('Server Error - Debugging Please!');
