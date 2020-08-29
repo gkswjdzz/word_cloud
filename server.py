@@ -257,7 +257,7 @@ def main():
         } else {
             throw Error('Retry Error');
         }
-        url = "https://word-cloud.gkswjdzz.endpoint.ainize.ai/image_color"
+        url = "/image_color"
         
         formData.append('image', document.getElementById('image_input').files[0])
         formData.append('text', document.getElementById('text_input').files[0])
