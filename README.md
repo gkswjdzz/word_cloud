@@ -1,4 +1,4 @@
-[![Run on Ainize](https://ainize.ai/static/images/run_on_ainize_button.svg)](http://word-cloud.gkswjdzz.endpoint.ainize.ai/)
+[![Run on Ainize](https://ainize.ai/images/run_on_ainize_button.svg)](https://ainize.web.app/redirect?git_repo=https://github.com/gkswjdzz/word_cloud)
 
 # Word Cloud
 
@@ -14,9 +14,9 @@ docker run -p 80:5000 -it gkswjdzz/word-cloud
 ```
 
 api server will be running on http://localhost.
+<!--
 
 ## How to Query
-<!--
 
 <img src="/images/image1-1.png" width="700" />
 
