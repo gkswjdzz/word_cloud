@@ -29,8 +29,8 @@ def post_stanfordnlp(filepath, lang) :
     predictions = requests.post(Config.STANFORDNLP_URL, data= data, files=files)
     print("post stafordnlp time : ", time.time() - start)
     text = []
-    
     ret = predictions.json()
+    print(ret)
     if type(ret) == str :
         return 400
         

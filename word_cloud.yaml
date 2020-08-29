@@ -177,6 +177,6 @@ tags:
   - name: Word Cloud
     description: Generate word-cloud from image and text.
 servers:
-  - url: 'https://word-cloud.gkswjdzz.endpoint.ainize.ai'
+  - url: 'https://master-word-cloud-gkswjdzz.endpoint.ainize.ai'
 
 security: [] 
